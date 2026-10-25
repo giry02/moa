@@ -4,7 +4,7 @@
 (() => {
   const api=window.Moyobom;
   if(!api)return;
-  const KEY='moyeobom-chat-appearance-v1',MIN=12,MAX=22,DEFAULT=13;
+  const KEY='moyeobom-chat-appearance-v1',MIN=12,MAX=22,DEFAULT=16;
   let size=DEFAULT,opened=false;
   try {
     const saved=JSON.parse(localStorage.getItem(KEY)||'null');

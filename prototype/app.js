@@ -201,17 +201,18 @@
   function toast(text){const element=$('#toast');element.textContent=text;element.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>element.hidden=true,3500);}
   function renderNav(){
     const nav=[['explore','compass','탐색'],['mygroups','users','내 모임'],['chats','chat','채팅'],['my','user','마이']];
-    const active=state.page==='group'?'mygroups':state.page==='chat'?'chats':state.page;
-    const markup=nav.map(([id,symbol,label])=>`<button type="button" class="nav-item ${active===id?'active':''}" data-page="${id}" ${active===id?'aria-current="page"':''}>${icon(symbol)}<span>${label}</span>${id==='chats'&&unreadCount('group:walk')>0?'<span class="nav-count">N</span>':''}</button>`).join('');
+    const active=state.page==='group'||['calendar','saved','operations','benefits'].includes(state.page)?'mygroups':state.page==='chat'?'chats':state.page;
+    const navMarkup=selected=>nav.map(([id,symbol,label])=>`<button type="button" class="nav-item ${selected===id?'active':''}" data-page="${id}" ${selected===id?'aria-current="page"':''}>${icon(symbol)}<span>${label}</span>${id==='chats'&&unreadCount('group:walk')>0?'<span class="nav-count">N</span>':''}</button>`).join('');
+    const markup=navMarkup(active);
     const inGroup=state.page==='group'||state.page==='chat',g=group();
     if(inGroup){
       const selected=state.page==='chat'?'채팅':state.groupTab;
       const context=[['홈','users'],['게시판','book'],['사진첩','image'],['정모','calendar'],['채팅','chat']];
       $('#side-nav').innerHTML=`<button type="button" class="nav-item group-side-back" data-page="${state.joined.has(g.id)?'mygroups':'explore'}">${icon('back')}<span>모임 목록으로</span></button><div class="group-side-caption"><span>현재 모임</span><strong>${esc(g.name)}</strong></div>${context.map(([tab,symbol])=>`<button type="button" class="nav-item ${selected===tab?'active':''}" data-context-tab="${tab}" ${selected===tab?'aria-current="page"':''}>${icon(symbol)}<span>${tab}</span></button>`).join('')}`;
-    }else $('#side-nav').innerHTML=markup;
+    }else $('#side-nav').innerHTML=navMarkup(state.page)+[['calendar','calendar','통합 캘린더'],['saved','book','보관함 · 조건 알림'],['benefits','sparkles','편의 · 꾸미기']].map(([id,symbol,label])=>`<button type="button" class="nav-item ${state.page===id?'active':''}" data-page="${id}" ${state.page===id?'aria-current="page"':''}>${icon(symbol)}<span>${label}</span></button>`).join('');
     $('#side-nav').setAttribute('aria-label',inGroup?'모임 안 메뉴':'주요 메뉴');
     $('#mobile-nav').innerHTML=markup;
-    $('#breadcrumb').textContent=({explore:'모임 탐색',mygroups:'내 모임',chats:'채팅',my:'마이',notifications:'알림함',group:'내 모임 / '+group().name,chat:'채팅 / '+group().name})[state.page];
+    $('#breadcrumb').textContent=({explore:'모임 탐색',mygroups:'내 모임',calendar:'통합 캘린더',saved:'보관함 · 조건 알림',operations:'모임 운영',benefits:'편의 · 꾸미기',chats:'채팅',my:'마이',notifications:'알림함',group:'내 모임 / '+group().name,chat:'채팅 / '+group().name})[state.page]||'모여봄';
     const myAvatar=$('.header-actions>[data-action="my"]');if(myAvatar&&safeMedia(member('me').photo))myAvatar.innerHTML=`<img src="${esc(member('me').photo)}" alt="내 프로필 사진">`;
   }
   function changePage(page,options={}){

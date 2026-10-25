@@ -1,0 +1,89 @@
+/* Reading sizes for this app only. Explicit chat preferences continue to win. */
+body.force-mobile { font-size:16px; line-height:1.6; font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",Arial,sans-serif; }
+body.force-mobile .page-heading h1 { font-size:27px; line-height:1.35; }
+body.force-mobile .page-heading p,
+body.force-mobile .intro-copy p,
+body.force-mobile .cm-prose,
+body.force-mobile .cm-comment .cm-prose,
+body.force-mobile .article-copy,
+body.force-mobile .modal-subtitle { font-size:16px; line-height:1.75; }
+body.force-mobile .group-name,
+body.force-mobile .group-card h3,
+body.force-mobile .meetup-card h3,
+body.force-mobile .chat-list-text strong,
+body.force-mobile .cm-post-summary h3,
+body.force-mobile .cm-friend-copy strong { font-size:17px; line-height:1.5; }
+body.force-mobile .button,
+body.force-mobile .button.small,
+body.force-mobile .nav-item,
+body.force-mobile .group-context-tab,
+body.force-mobile .detail-tab,
+body.force-mobile .category-chip,
+body.force-mobile .filter-chip { font-size:16px; }
+body.force-mobile .mobile-nav .nav-item { font-size:12px; }
+body.force-mobile .group-meta,
+body.force-mobile .group-meta span,
+body.force-mobile .group-category,
+body.force-mobile .group-description,
+body.force-mobile .group-card p,
+body.force-mobile .meetup-card p,
+body.force-mobile .meetup-date,
+body.force-mobile .meetup-room-entry > span,
+body.force-mobile .chat-list-text p,
+body.force-mobile .cm-post-summary p,
+body.force-mobile .cm-my-profile p,
+body.force-mobile .cm-explore-description p,
+body.force-mobile .cm-friend-copy small,
+body.force-mobile .cm-muted,
+body.force-mobile .form-hint,
+body.force-mobile .form-field > label,
+body.force-mobile .modal-body .form-label { font-size:14px; line-height:1.65; }
+body.force-mobile .cm-post-summary small,
+body.force-mobile .cm-author small,
+body.force-mobile .cm-author strong,
+body.force-mobile .cm-label,
+body.force-mobile .cm-source small,
+body.force-mobile .cm-source strong,
+body.force-mobile .cm-demo-note,
+body.force-mobile .cm-interest-note,
+body.force-mobile .pill,
+body.force-mobile .tag,
+body.force-mobile .chat-list-meta { font-size:12px; line-height:1.55; }
+body.force-mobile input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]),
+body.force-mobile select,
+body.force-mobile textarea { font-size:16px; }
+body.mobile-chat-active .chat-header .chat-heading h2 { font-size:16px; }
+body.mobile-chat-active .chat-heading p { font-size:12px; }
+body.mobile-chat-active .message-name { font-size:13px; }
+body.mobile-chat-active .message-time { font-size:11px; }
+body.mobile-chat-active .message-bubble { line-height:1.6; }
+body.mobile-chat-active .chat-tools .button { font-size:12px; padding:6px 7px; }
+body.mobile-chat-active .unread-summary-banner { font-size:12px; }
+body.mobile-chat-active .unread-summary-banner strong { font-size:12px; }
+body.mobile-chat-active .send-label { font-size:14px; }
+body.mobile-chat-active .chat-font-entry strong { font-size:16px; }
+body.mobile-chat-active .chat-font-entry small,
+body.mobile-chat-active .chat-font-heading > label,
+body.mobile-chat-active .chat-font-footer > span,
+body.mobile-chat-active .chat-font-footer > button { font-size:12px; }
+body.force-mobile .page-heading { flex-wrap:wrap; gap:14px; }
+body.force-mobile .cm-explore-description p { max-width:none; flex:1; }
+body.force-mobile .cm-explore-description .button { font-size:13px; }
+body.force-mobile .cm-friend-copy { gap:3px; }
+body.force-mobile .cm-post-open { padding:14px 0; }
+body.force-mobile .group-context-nav { padding:0 6px; }
+body.force-mobile .modal-footer { flex-wrap:wrap; gap:8px; }
+body.force-mobile .modal-footer .button { flex:1; }
+body.force-mobile .chip { font-size:15px; }
+body.force-mobile .result-title,
+body.force-mobile .result-title strong { font-size:15px; }
+body.force-mobile .result-title > span { font-size:13px; word-break:keep-all; }
+body.force-mobile .group-info h3 { font-size:18px; line-height:1.5; word-break:keep-all; overflow-wrap:anywhere; }
+body.force-mobile .group-info { padding:17px; }
+body.force-mobile .eyebrow { font-size:12px; }
+body.force-mobile .group-meta svg.icon { width:14px!important; height:14px!important; }
+body.force-mobile .profile-stat span { font-size:14px; }
+body.force-mobile .meetup-room-entry { flex-wrap:wrap; gap:8px; }
+body.force-mobile .cm-explore-description p,
+body.force-mobile .page-heading p { word-break:keep-all; }
+body.force-mobile .group-meta { color:#717d6a; }
