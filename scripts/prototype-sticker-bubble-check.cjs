@@ -1,0 +1,38 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'C:/Users/Giry/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules/playwright-core');
+const base=process.env.PROTOTYPE_STICKER_BASE||'http://127.0.0.1:7261',publicRun=!!process.env.PROTOTYPE_STICKER_BASE,root='E:/AI_Project/somoim/artifacts/';
+const errors=[],checks=[],results=[];
+async function enter(p,mobile){await p.goto(base+'/'+(mobile?'mobile.html':'web.html'));await p.locator((mobile?'#mobile-nav':'#side-nav')+' [data-page="chats"]').click();await p.locator('[data-room="group:walk"]').first().click();}
+async function drawer(p){if(!await p.locator('#sticker-drawer').isVisible())await p.locator('[data-action="emoji"]').click();}
+async function send(p,id,caption=''){
+ await drawer(p);await p.locator('[data-sticker-pack="'+id.split('-')[0]+'"]').click();await p.locator('[data-sticker-choice="'+id+'"]').click();if(caption)await p.locator('#message-input').fill(caption);await p.locator('#send-message').click();
+ return p.evaluate(()=>{const m=window.Moyobom.chatMessages().at(-1);return{id:m.id,sticker:m.stickerId,caption:m.stickerCaption,text:m.text,reply:m.replyTo};});
+}
+async function bubble(p,id){return p.locator('#msg-'+id+' .message-bubble').evaluate(e=>{const s=getComputedStyle(e);return{background:s.backgroundColor,radii:[s.borderTopLeftRadius,s.borderTopRightRadius,s.borderBottomLeftRadius,s.borderBottomRightRadius],padding:s.padding,text:e.innerText,font:s.fontSize};});}
+function normalBubble(actual,expected){assert.equal(actual.background,expected.background);assert.deepEqual(actual.radii,expected.radii);assert.equal(actual.padding,expected.padding);assert.notEqual(actual.background,'rgba(0, 0, 0, 0)');}
+(async()=>{const browser=await chromium.launch({headless:true});try{
+ for(const mobile of publicRun?[true]:process.env.PROTOTYPE_STICKER_MODE==='web'?[false]:[true,false]){
+  const c=await browser.newContext({viewport:{width:mobile?390:1440,height:844},isMobile:mobile,hasTouch:mobile,locale:'ko-KR'}),p=await c.newPage();p.on('pageerror',e=>errors.push(e.message));await enter(p,mobile);
+  const standard=await p.evaluate(()=>{const pick=e=>{const s=getComputedStyle(e);return{background:s.backgroundColor,radii:[s.borderTopLeftRadius,s.borderTopRightRadius,s.borderBottomLeftRadius,s.borderBottomRightRadius],padding:s.padding};};return{incoming:pick(document.querySelector('#msg-final-equipment .message-bubble')),self:pick(document.querySelector('.message.self .message-bubble'))};});
+  const packs=await p.evaluate(()=>window.MoyobomStickers.packs.map(pack=>({...pack,count:window.MoyobomStickers.stickers.filter(s=>s.pack===pack.id).length})));assert.deepEqual(packs.map(x=>[x.id,x.count]),[['bunny',10],['cat',8],['bear',8],['duck',8]]);
+  const sent=[];
+  for(const [i,pack] of packs.entries()){
+   await drawer(p);await p.locator('[data-sticker-pack="'+pack.id+'"]').click();assert.equal(await p.locator('.em-sticker-option').count(),pack.count);await p.waitForFunction(()=>[...document.querySelectorAll('.em-sticker-option img')].every(x=>x.complete&&x.naturalWidth===240));
+   const m=await send(p,pack.coverId,i%2?'함께 산책해요!':'');assert.equal(m.sticker,pack.coverId);assert.equal(m.caption,i%2===1);normalBubble(await bubble(p,m.id),standard.self);
+   if(i%2)assert.match((await bubble(p,m.id)).text,/함께 산책해요!/);
+   await p.locator('[data-sticker-message="'+m.id+'"]').click();assert.match(await p.locator('.modal-body').innerText(),new RegExp(pack.name));assert.match(await p.locator('.em-sticker-full').getAttribute('alt'),new RegExp(pack.name));await p.getByRole('button',{name:'닫기',exact:true}).first().click();sent.push(m);
+  }
+  await drawer(p);await p.locator('[data-sticker-pack="recent"]').click();assert.deepEqual(await p.locator('[data-sticker-choice]').evaluateAll(es=>es.map(x=>x.dataset.stickerChoice)),packs.map(x=>x.coverId).reverse());await p.locator('[data-action="sticker-close"]').click();
+  const incoming=await p.evaluate(sent=>{const a=window.Moyobom,at=Math.max(...a.chatMessages().map(m=>m.at))+1000;const fixtures=sent.slice(0,2).map((s,i)=>({id:'fixture-sticker-'+i,senderId:'minji',at:at+i*1000,text:i?'좋아요. 일요일에 만나요!':'[이모티콘] 안녕!',groupId:'walk',roomId:'group:walk',mentions:[],stickerId:s.sticker,stickerCaption:i===1,replyTo:i?'final-equipment':null}));a.state.messages.push(...fixtures);a.persist();a.render();return fixtures.map(m=>m.id);},sent);
+  for(const id of incoming)normalBubble(await bubble(p,id),standard.incoming);assert.ok(await p.locator('#msg-'+incoming[1]+' .reply-card').isVisible());
+  if(mobile){await p.locator('[data-message-more="'+incoming[1]+'"]').click();await p.locator('.modal [data-reaction-picker]').click();}else await p.locator('#msg-'+incoming[1]+' [data-reaction-picker]').click();await p.locator('[data-select-emoji="👍"]').click();assert.equal(await p.locator('#msg-'+incoming[1]+' .reaction-chip.reacted').count(),1);normalBubble(await bubble(p,incoming[1]),standard.incoming);
+  await p.reload();await p.locator((mobile?'#mobile-nav':'#side-nav')+' [data-page="chats"]').click();await p.locator('[data-room="group:walk"]').first().click();const restored=await p.evaluate(ids=>window.Moyobom.chatMessages().filter(m=>ids.includes(m.id)).map(m=>({id:m.id,sticker:m.stickerId,caption:m.stickerCaption,text:m.text})),[...sent.map(m=>m.id),...incoming]);assert.equal(restored.length,6);for(const m of sent){const r=restored.find(x=>x.id===m.id);assert.equal(r.sticker,m.sticker);assert.equal(r.caption,m.caption);assert.equal(r.text,m.text);normalBubble(await bubble(p,m.id),standard.self);}for(const id of incoming)normalBubble(await bubble(p,id),standard.incoming);assert.ok(await p.locator('#msg-'+incoming[1]+' .reply-card').isVisible());assert.equal(await p.locator('#msg-'+incoming[1]+' .reaction-chip.reacted').count(),1);
+  if(mobile){
+   await p.locator('.chat-more-button').click();await p.locator('[data-chat-font-action="open"]').click();await p.locator('#chat-font-range').press('End');await p.locator('[data-chat-font-action="close"]').click();await p.setViewportSize({width:360,height:740});assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal((await bubble(p,incoming[1])).font,'22px');await p.setViewportSize({width:390,height:844});
+   const last=await send(p,'duck-hi','일요일에 만나요!');normalBubble(await bubble(p,last.id),standard.self);await p.locator('[data-action="sticker-close"]').isVisible().then(async visible=>{if(visible)await p.locator('[data-action="sticker-close"]').click();});await p.locator('#toast').waitFor({state:'hidden'});await p.waitForFunction(()=>[...document.querySelectorAll('.em-sticker-message img')].every(x=>x.complete&&x.naturalWidth));await p.screenshot({path:root+(publicRun?'prototype-pages-sticker-bubbles.png':'prototype-sticker-bubbles-mobile.png')});
+  }
+  results.push({mode:mobile?'mobile':'web',packs:packs.map(x=>({id:x.id,count:x.count})),sent,restored,standard,noOverflow360:mobile?true:null});checks.push((mobile?'mobile':'web')+': four packs, normal round bubbles for own/incoming and sticker-only/caption, pack-correct expansion, mixed recent, reload + reply/reaction');await c.close();process.stdout.write('PASS '+(mobile?'mobile':'web')+' sticker packs and round bubbles\n');
+ }
+ assert.deepEqual(errors,[]);fs.writeFileSync(root+(publicRun?'prototype-sticker-bubble-public-qa.json':'prototype-sticker-bubble-qa.json'),JSON.stringify({ok:true,base,checks,results,errors},null,2));
+ }finally{await browser.close();}})().catch(e=>{process.stderr.write(e.stack+'\n');process.exitCode=1;});
