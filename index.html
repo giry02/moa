@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fffaf4">
+  <meta name="description" content="모여봄 웹·모바일 프로토타입. 접속한 기기에 맞는 화면으로 연결합니다.">
+  <title>모여봄 — 웹·모바일</title>
+  <script>
+    (() => {
+      const query=new URLSearchParams(location.search),requested=query.get('view');
+      const ua=navigator.userAgent;
+      const mobileDevice=navigator.userAgentData?.mobile===true
+        || /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
+        || (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+      const unknownTouchDevice=!/Windows NT|X11|CrOS|Macintosh/i.test(ua)
+        && matchMedia('(max-width: 880px) and (pointer: coarse)').matches;
+      const useMobile=requested==='mobile'||(requested!=='web'&&(mobileDevice||unknownTouchDevice));
+      const destination=new URL(useMobile?'mobile.html':'web.html',location.href);
+      destination.search=location.search;
+      destination.hash=location.hash;
+      location.replace(destination.href);
+    })();
+  </script>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#fffaf4;color:#394132;font:16px/1.7 system-ui,sans-serif;display:grid;place-items:center;min-height:100dvh;padding:24px}main{max-width:420px;text-align:center}h1{font-size:28px;margin:0 0 10px}p{color:#8b9184;font-size:14px}nav{display:flex;gap:12px;justify-content:center;margin-top:24px}a{color:#815e3d;text-decoration:none;background:#fff;border:1px solid #e9dfd2;border-radius:10px;padding:11px 18px}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>모여봄</h1>
+    <p>기기에 맞는 화면으로 연결하고 있어요.</p>
+    <nav aria-label="화면 직접 선택"><a href="./mobile.html">모바일 화면</a><a href="./web.html">웹 화면</a></nav>
+    <noscript><p>화면을 선택한 뒤 자바스크립트를 켜 주세요.</p></noscript>
+  </main>
+</body>
+</html>

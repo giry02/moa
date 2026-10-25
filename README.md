@@ -2,6 +2,10 @@
 
 지역·관심사 기반 모임 앱의 설계와 브라우저에서 확인할 수 있는 웹·모바일 HTML 프로토타입입니다. 서비스 이름은 가칭입니다.
 
+공개 화면: [기기 자동 선택](https://giry02.github.io/moa/) · [웹](https://giry02.github.io/moa/web.html) · [모바일](https://giry02.github.io/moa/mobile.html)
+
+배포 경로와 HTML 갱신 방법은 [배포 안내](docs/deployment.md)에서 확인합니다.
+
 ## 실행
 
 웹은 `prototype/index.html`, 모바일 화면 검토는 `prototype/mobile.html`에서 시작합니다. 패키지 설치나 빌드가 필요하지 않습니다. HTML·JS·CSS와 `assets` 폴더를 함께 유지하세요.

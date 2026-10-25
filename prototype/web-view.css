@@ -1,0 +1,74 @@
+/* Explicit PC entry: keep the desktop structure even in a narrow viewport. */
+body.force-web { min-width:1180px; background:var(--bg); }
+body.force-web .app-shell { display:grid; grid-template-columns:224px minmax(0,1fr); min-width:1180px; max-width:1600px; width:100%; margin:0 auto; min-height:100dvh; box-shadow:none; }
+body.force-web .sidebar { display:flex; position:sticky; top:0; height:100dvh; padding:38px 24px 24px; flex-direction:column; }
+body.force-web .brand { display:flex; font-size:24px; gap:10px; }
+body.force-web .brand-mark { width:38px; height:40px; font-size:22px; }
+body.force-web .side-nav { margin-top:40px; gap:8px; }
+body.force-web .side-nav .nav-item { display:flex; flex-direction:row; align-items:center; gap:12px; padding:14px 15px; font-size:14px; border-radius:12px; }
+body.force-web .side-nav .group-side-back { font-size:12px; border-radius:0; }
+body.force-web .workspace { min-width:0; }
+body.force-web .app-header { display:flex; height:88px; padding:0 36px; }
+body.force-web .breadcrumb { display:block; font-size:13px; }
+body.force-web .header-actions { gap:15px; }
+body.force-web .header-actions .avatar { display:flex; width:37px; height:37px; }
+body.force-web .app-view-switch { display:inline-flex; font-size:11px; }
+body.force-web .mobile-nav,
+body.force-web .mobile-brand,
+body.force-web .group-context-header,
+body.force-web .group-context-nav,
+body.force-web .chat-more-button,
+body.force-web .message-more-button { display:none!important; }
+body.force-web .main-content { max-width:1240px; padding:35px 36px 50px; margin:0 auto; }
+body.force-web .main-content.chat-mode { max-width:none; padding:0; }
+body.force-web .page-heading h1 { font-size:28px; }
+body.force-web .page-heading p { font-size:13px; }
+body.force-web .filters { grid-template-columns:minmax(0,1fr) 160px; }
+body.force-web .group-grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; }
+body.force-web .group-open { display:block; min-height:0; }
+body.force-web .group-cover { height:154px; padding:20px; }
+body.force-web .group-cover .cover-word { max-width:80%; font-size:28px; }
+body.force-web .group-cover .cover-art { width:110px; height:110px; font-size:46px; right:-18px; top:-15px; }
+body.force-web .group-info { padding:17px 17px 18px; }
+body.force-web .group-info h3 { font-size:14px; }
+body.force-web .group-detail { border:1px solid var(--line); border-radius:18px; overflow:hidden; }
+body.force-web .group-desktop-back { display:inline-flex; }
+body.force-web .detail-cover { display:flex; height:154px; padding:30px 32px; }
+body.force-web .detail-heading { display:flex; align-items:start; justify-content:space-between; gap:16px; padding:25px 28px 20px; }
+body.force-web .detail-heading h1 { font-size:23px; }
+body.force-web .detail-actions { max-width:260px; justify-content:end; padding-top:8px; }
+body.force-web .detail-tabs { display:grid; position:static; grid-template-columns:repeat(4,1fr); padding:0 28px; }
+body.force-web .detail-body { padding:26px 28px 30px; }
+body.force-web .intro-layout { grid-template-columns:minmax(0,1fr) 270px; gap:28px; }
+body.force-web .meetup-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+body.force-web .photo-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+body.force-web .chat-layout { display:flex; height:calc(100dvh - 88px); min-height:500px; }
+body.force-web .chat-header { min-height:75px; padding:14px 22px; gap:10px; }
+body.force-web .chat-header .room-self-avatar { display:flex; width:38px; height:38px; }
+body.force-web .chat-heading h2 { font-size:15px; max-width:none; }
+body.force-web .chat-heading p { font-size:11px; }
+body.force-web .room-switch-row,
+body.force-web .chat-demo-controls { display:flex; }
+body.force-web .room-switch-row { padding:8px 20px; }
+body.force-web .pinned-meetup { display:flex; padding:10px 22px; }
+body.force-web .message-stream { padding:24px 26px 40px; }
+body.force-web .message-main { max-width:76%; }
+body.force-web .message.self .message-main { max-width:78%; }
+body.force-web .message-bubble { font-size:13px; padding:11px 13px; }
+body.force-web .message-tools { display:flex; }
+body.force-web .composer { padding:13px 20px 12px; }
+body.force-web .composer-row { grid-template-columns:36px 36px 30px minmax(0,1fr) auto; grid-template-rows:auto 40px; gap:4px 5px; }
+body.force-web .composer-row > textarea { min-height:52px; max-height:120px; padding:6px 4px; font-size:14px; }
+body.force-web .composer-row > .send-button { min-width:72px; min-height:38px; height:auto; padding:7px 12px; }
+body.force-web .composer-row > .send-button svg { display:block; }
+body.force-web .composer-note { display:block; font-size:11px; }
+body.force-web .composer.em-drawer-open .composer-note { display:none; }
+body.force-web .summary-panel { position:static; inset:auto; transform:none; width:338px; max-width:none; min-width:310px; height:auto; border-radius:0; box-shadow:none; z-index:auto; }
+body.force-web .summary-scrim { display:none; }
+body.force-web .em-drawer { height:330px; max-height:43dvh; margin:11px -16px -13px; border-radius:0 0 15px 15px; }
+body.force-web .em-sticker-grid { grid-template-columns:repeat(5,minmax(0,1fr)); }
+body.force-web .em-mini-grid { grid-template-columns:repeat(9,minmax(0,1fr)); }
+body.force-web .em-sticker-message > img { width:178px; height:178px; }
+body.force-web .em-pack-bar > .em-pack-caption { display:block; }
+body.force-web .modal { max-width:560px; }
+body.force-web .modal.wide { max-width:680px; }

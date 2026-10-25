@@ -5,6 +5,10 @@
   let appAPI;
   let cancelReplySwipe=()=>{};
   let disposeReplySwipe=()=>{};
+  const requestedView=new URLSearchParams(location.search).get('view');
+  const viewMode=['mobile','web'].includes(requestedView)?requestedView:location.pathname.endsWith('/mobile.html')?'mobile':location.pathname.endsWith('/web.html')?'web':'auto';
+  const forcedMobile=viewMode==='mobile',forcedWeb=viewMode==='web';
+  const usesMobileLayout=()=>!forcedWeb&&(forcedMobile||window.innerWidth<=880);
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -515,7 +519,7 @@
   function syncChatLayoutState(){
     document.documentElement.style.setProperty('--chat-viewport-height',(window.visualViewport?.height||window.innerHeight)+'px');
     const chatting=state.page==='chat';
-    const inGroup=chatting||state.page==='group',mobile=document.body.classList.contains('force-mobile')||window.innerWidth<=880;
+    const inGroup=chatting||state.page==='group',mobile=usesMobileLayout();
     document.body.classList.toggle('chat-active',chatting);
     document.body.classList.toggle('mobile-chat-active',chatting&&mobile);
     document.body.classList.toggle('group-active',inGroup);
@@ -619,7 +623,7 @@
     if(button.dataset.meetup){showMeetup(button.dataset.meetup);return;}
     if(button.dataset.attend){const m=state.meetups.find(m=>m.id===button.dataset.attend);if(!m)return;if(!state.joined.has(m.groupId)){toast('모임에 가입한 뒤 참석할 수 있어요.');return;}const cancel=state.attendance.has(m.id);if(cancel){state.attendance.delete(m.id);m.attendeeIds=(m.attendeeIds||[]).filter(id=>id!=='me');}else{if(roomParticipants('meetup:'+m.id).length>=m.capacity){toast('참석 인원이 가득 찼어요.');return;}state.attendance.add(m.id);m.attendeeIds=[...new Set([...(m.attendeeIds||[]),'me'])];}persist();if(cancel&&state.page==='chat'&&getRoomId()==='meetup:'+m.id){state.summaryJob++;changePage('group',{groupId:m.groupId,tab:'정모'});toast('참석을 취소하여 이 정모 대화방 접근이 종료됐어요.');return;}showMeetup(m.id,true);if(state.page==='group')render();return;}
     if(button.dataset.summaryTarget){state.summaryTarget=button.dataset.summaryTarget;dirtySummary();return;}
-    if(button.dataset.source){state.focusId=button.dataset.source;renderMessages('source');if((window.innerWidth<=880||document.body.classList.contains('force-mobile'))){state.summaryOpen=false;state.summaryJob++;$('.summary-panel')?.remove();$('.summary-scrim')?.remove();$('[data-action="toggle-summary"]')?.setAttribute('aria-expanded','false');}toast('요약의 원문을 강조했어요. 아래 버튼으로 최신 대화로 돌아갈 수 있어요.');return;}
+    if(button.dataset.source){state.focusId=button.dataset.source;renderMessages('source');if(usesMobileLayout()){state.summaryOpen=false;state.summaryJob++;$('.summary-panel')?.remove();$('.summary-scrim')?.remove();$('[data-action="toggle-summary"]')?.setAttribute('aria-expanded','false');}toast('요약의 원문을 강조했어요. 아래 버튼으로 최신 대화로 돌아갈 수 있어요.');return;}
     if(button.dataset.placeChoice){state.placeChoice=button.dataset.placeChoice;const p=places.find(p=>p.id===state.placeChoice);$('#selected-place').innerHTML=`<div class="selected-place">${icon('check').replace('class="icon"','class="icon" style="width:13px;height:13px;vertical-align:-2px"')} ${p.name}<small>${p.address}</small></div>`;$$('[data-place-choice]').forEach(b=>b.classList.toggle('selected',b.dataset.placeChoice===state.placeChoice));return;}
     if(button.dataset.routeMode){state.routeMode=button.dataset.routeMode;refreshRoute();return;}
     if(button.dataset.post!==undefined){const titles=['모임 참여 안내','이번 주말, 함께 가고 싶은 곳','지난 모임의 작은 기록'];const contents=['반가워요. 우리 모임은 부담 없이 함께 취미를 즐기는 공간이에요.\n서로를 존중하고, 정모에 참석하기 어려우면 미리 알려주세요.\n모임 일정은 정모 탭, 빠른 이야기는 채팅방에서 확인할 수 있어요.','이번 주말에는 어떤 곳을 걸어 보고 싶으세요?\n좋아하는 동네와 산책 코스를 채팅에서 나눠 주세요.','천천히 걸으며 나눈 작은 이야기들이 오래 기억에 남아요.\n다음 산책에서도 함께 만나요.'];openModal(titles[Number(button.dataset.post)],'<div class="article-meta">민지 · 모임 게시판 · 샘플 게시글</div><p class="article-copy">'+contents[Number(button.dataset.post)]+'</p>');return;}
@@ -691,8 +695,10 @@
   appAPI=window.Moyobom={state,groups,members,places,$,$$,esc,icon,group,member,render,changePage,persist,openModal,closeModal,toast,meetupAt,dateLabel,time,chatMessages,openRoom,jumpToMessage,getRoomId,registerExtension(name,extension){extensions.set(name,extension);extension.init?.(appAPI);extension.afterRender?.(appAPI);return appAPI;}};
   window.addEventListener('resize',syncChatLayoutState,{passive:true});
   window.visualViewport?.addEventListener('resize',syncChatLayoutState,{passive:true});
-  const forcedMobile=new URLSearchParams(location.search).get('view')==='mobile'||location.pathname.endsWith('/mobile.html');document.body.classList.toggle('force-mobile',forcedMobile);
-  const viewSwitch=$('#view-switch');if(viewSwitch){viewSwitch.href=forcedMobile?'./index.html?view=web':'./mobile.html';viewSwitch.textContent=forcedMobile?'웹 보기':'모바일 보기';}
+  document.body.classList.toggle('force-mobile',forcedMobile);document.body.classList.toggle('force-web',forcedWeb);document.body.dataset.viewMode=viewMode;
+  const viewport=document.querySelector('meta[name="viewport"]');if(viewport&&viewMode!=='auto')viewport.content=forcedWeb?'width=1280, viewport-fit=cover':'width=device-width, initial-scale=1, viewport-fit=cover';
+  if(forcedWeb&&!document.querySelector('link[data-web-view]')){const stylesheet=document.createElement('link');stylesheet.rel='stylesheet';stylesheet.href=new URL('web-view.css',document.baseURI).href;stylesheet.dataset.webView='';document.head.append(stylesheet);}
+  const viewSwitch=$('#view-switch');if(viewSwitch){viewSwitch.href=new URL(forcedMobile?'web.html':'mobile.html',location.href).href;viewSwitch.textContent=forcedMobile?'웹 보기':'모바일 보기';}
   const bell=$('.notifications-bell');if(bell)bell.insertAdjacentHTML('afterbegin',icon('bell'));$('.notifications-bell>span[aria-hidden]')?.remove();
   render();
 })();
