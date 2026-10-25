@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#fffaf4">
+  <meta name="description" content="모여봄 소모임 서비스의 로컬 HTML 프로토타입. 모임 탐색, 정모 등록, 채팅, 대화 요약 흐름을 확인합니다.">
+  <title>모여봄 — 함께하는 취미, 가벼운 대화</title>
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./chat-enhancements.css">
+  <link rel="stylesheet" href="./community.css">
+  <link rel="stylesheet" href="./emoji-drawer.css">
+  <link rel="stylesheet" href="./mobile-chat.css">
+  <link rel="stylesheet" href="./chat-font.css">
+  <script src="./assets/map-previews.js" defer></script>
+  <script src="./sticker-packs.js" defer></script>
+  <script src="./app.js" defer></script>
+  <script src="./community.js" defer></script>
+  <script src="./chat-font.js" defer></script>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="주요 메뉴">
+      <a class="brand" href="#explore" aria-label="모여봄 홈"><span class="brand-mark" aria-hidden="true">모</span><span>모여봄<span class="brand-caption">우리 동네, 우리 취미</span></span></a>
+      <nav class="side-nav" id="side-nav"></nav>
+      <div class="sidebar-footer"><span class="demo-dot"></span><strong>로컬 프로토타입</strong><p>샘플 데이터로 확인하는 설계 시안<br>AI · 지도 · 서버는 연결되지 않았어요.</p><span class="version">DESIGN PREVIEW / 2026.10</span></div>
+    </aside>
+    <div class="workspace">
+      <header class="app-header"><a class="mobile-brand" href="#explore"><span class="brand-mark" aria-hidden="true">모</span>모여봄</a><div class="breadcrumb" id="breadcrumb">모임 탐색</div><div class="header-actions"><a id="view-switch" class="app-view-switch" href="./mobile.html">모바일 보기</a><span class="demo-badge"><span></span>데모 · 샘플 데이터</span><button class="icon-button notifications-bell" type="button" data-action="inbox" aria-label="알림함"><span aria-hidden="true">♧</span><span class="notification-count" id="notification-count" hidden></span></button><button class="avatar my-avatar" type="button" data-action="my" aria-label="내 프로필">나</button></div></header>
+      <main id="main-content" class="main-content"></main>
+    </div>
+    <nav class="mobile-nav" id="mobile-nav" aria-label="앱 메뉴"></nav>
+  </div>
+  <div id="modal-root"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
