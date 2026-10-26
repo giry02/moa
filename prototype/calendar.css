@@ -57,3 +57,36 @@ body.force-mobile .calendar-page .cal-event-actions .button{min-height:46px;whit
  body:not(.force-web):not(.force-mobile) .calendar-page .cal-event-actions{display:grid;grid-template-columns:minmax(0,1fr)}
  body:not(.force-web):not(.force-mobile) .calendar-page .cal-event-actions .button{min-height:46px;white-space:normal;overflow-wrap:anywhere}
 }
+/* Group identity stays the same in the month, agenda and named legend. */
+.calendar-page .cal-day-event{background:var(--cal-group-soft,#eef0f3);color:var(--cal-group-color,#5f6773);border-left:3px solid var(--cal-group-color,#a5aeb8)}
+.calendar-page .cal-day-event.is-attending{background:var(--cal-group-soft,#eef0f3);color:var(--cal-group-color,#5f6773);outline:1px solid var(--cal-group-color,#5f6773);outline-offset:-1px}
+.calendar-page .cal-day-dots{gap:6px}
+.calendar-page .cal-day-dots i{width:7px;height:7px;background:var(--cal-group-color,#a5aeb8)}
+.calendar-page .cal-day-dots i.is-attending{background:var(--cal-group-color,#a5aeb8);outline:1px solid var(--cal-group-color,#a5aeb8);outline-offset:2px}
+.calendar-page .cal-legend .cal-attendance-ring{background:transparent;border:1px solid #626d7b;outline:1px solid #626d7b;outline-offset:2px;width:6px;height:6px;margin:0 3px}
+.calendar-page .cal-event-card{border-left:4px solid var(--cal-group-color,var(--line))}
+.calendar-page .cal-event-day{color:var(--cal-group-color,#646b76)}
+.calendar-page .cal-group-link{color:var(--cal-group-color,#737985);background:var(--cal-group-soft,transparent);border-radius:5px;padding:2px 6px}
+.calendar-page .cal-status.is-attending{background:#fff;border:1px solid #b1b8bf;color:#485562;padding:1px 5px}
+.cal-group-legend{padding:12px 14px 14px;border-top:1px solid var(--line)}
+.cal-group-legend-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;font-size:12px;color:#68717c}
+.cal-group-legend-heading strong{font-weight:650;color:#555f6c}
+.cal-group-legend-heading span{font-size:12px;white-space:nowrap}
+.cal-group-legend ul{display:flex;flex-wrap:wrap;gap:7px;list-style:none;margin:0;padding:0}
+.cal-group-legend-item{display:flex;align-items:center;gap:7px;min-width:0;max-width:100%;padding:5px 8px;border-radius:7px;background:var(--cal-group-soft);color:var(--cal-group-color);font-size:13px;line-height:1.6}
+.cal-group-legend-item>i{width:7px;height:7px;border-radius:50%;background:var(--cal-group-color);flex:none}
+.cal-group-legend-item>span{min-width:0;overflow-wrap:anywhere}
+.cal-group-legend-item>small{font-size:12px;white-space:nowrap;flex:none;opacity:.85}
+.cal-group-legend>p{font-size:13px;color:var(--muted);line-height:1.7}
+.cal-sample-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3px 16px;margin:-3px 0 15px;padding:0 2px}
+.cal-sample-row p{font-size:12px;color:var(--muted);line-height:1.7}
+.cal-sample-row button{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:5px 0;font-size:13px!important;color:var(--primary-deep);font-weight:650}
+.cal-sample-row button .icon{width:15px;height:15px}
+body.force-mobile .cal-group-legend-item{font-size:14px}
+body.force-mobile .cal-group-legend-heading{font-size:13px}
+body.force-mobile .cal-sample-row button{font-size:14px!important}
+@media(max-width:880px){
+ body:not(.force-web) .cal-group-legend-item{font-size:14px}
+ body:not(.force-web) .cal-group-legend-heading{font-size:13px}
+ body:not(.force-web) .cal-sample-row button{font-size:14px!important}
+}

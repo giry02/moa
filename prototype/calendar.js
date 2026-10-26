@@ -7,6 +7,25 @@
   const KEY='moyeobom-calendar-v1',KST=9*60*60*1000,DEFAULT_DURATION=120;
   const filters=['all','joined','attending'];
   const esc=api.esc;
+  const groupColors={
+    walk:{color:'#2e6f4f',soft:'#eaf4ec',label:'초록'},
+    book:{color:'#5846a3',soft:'#f0edfb',label:'보라'},
+    racket:{color:'#a95318',soft:'#fff0e1',label:'주황'}
+  };
+  const fallbackColors=[
+    {color:'#285b98',soft:'#eaf1fb',label:'파랑'},
+    {color:'#176979',soft:'#e8f4f6',label:'청록'},
+    {color:'#98385d',soft:'#fbeaf1',label:'자주'},
+    {color:'#64661f',soft:'#f2f3e6',label:'올리브'},
+    {color:'#6d503c',soft:'#f5eee8',label:'갈색'},
+    {color:'#4e5b70',soft:'#edf0f5',label:'회청'}
+  ];
+  function groupColor(groupId){
+    if(Object.hasOwn(groupColors,groupId))return {...groupColors[groupId]};
+    let hash=2166136261;for(const character of String(groupId??'')){hash^=character.codePointAt(0);hash=Math.imul(hash,16777619)>>>0;}
+    return {...fallbackColors[hash%fallbackColors.length]};
+  }
+  function groupStyle(groupId){const color=groupColor(groupId);return `--cal-group-color:${color.color};--cal-group-soft:${color.soft}`;}
   const clock=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false});
   const longDate=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'long'});
   let saved={};
@@ -62,21 +81,28 @@
     view.month=next;view.date='';
   }
   function monthTitle(){const [year,month]=view.month.split('-').map(Number);return `${year}년 ${month}월`;}
+  function groupLegendMarkup(visible){
+    const monthEvents=visible.filter(event=>monthKey(event.start)===view.month),counts=new Map();
+    for(const event of monthEvents)counts.set(event.group.id,(counts.get(event.group.id)||0)+1);
+    const groups=api.groups.filter(group=>counts.has(group.id));
+    return `<section class="cal-group-legend" aria-label="모임별 일정 색상"><div class="cal-group-legend-heading"><strong>모임별 색상</strong><span>${groups.length}개 모임</span></div>${groups.length?`<ul>${groups.map(group=>`<li class="cal-group-legend-item" data-calendar-group="${esc(group.id)}" style="${groupStyle(group.id)}"><i aria-hidden="true"></i><span>${esc(group.name)}</span><small>${counts.get(group.id)}개</small></li>`).join('')}</ul>`:'<p>이달 표시할 모임 일정이 없어요.</p>'}</section>`;
+  }
   function monthMarkup(visible){
     const [year,month]=view.month.split('-').map(Number),first=Date.UTC(year,month-1,1),offset=new Date(first).getUTCDay();
     const byDate=new Map();for(const event of visible){if(!byDate.has(event.date))byDate.set(event.date,[]);byDate.get(event.date).push(event);}
     const cells=Array.from({length:42},(_,index)=>{
       const at=first+(index-offset)*86400000,key=new Date(at).toISOString().slice(0,10),items=byDate.get(key)||[],inside=key.startsWith(view.month+'-'),today=key===todayKey(),selected=key===view.date;
-      const label=`${Number(key.slice(5,7))}월 ${Number(key.slice(8))}일${today?', 오늘':''}, 정모 ${items.length}개${selected?', 선택됨':''}`;
-      return `<td class="${inside?'':'cal-outside'} ${index%7===0?'cal-sunday':index%7===6?'cal-saturday':''}"><button type="button" class="cal-day ${today?'is-today':''} ${selected?'is-selected':''}" data-calendar-day="${key}" data-calendar-focus="day-${key}" aria-label="${esc(label)}" aria-pressed="${selected}"><time datetime="${key}">${Number(key.slice(8))}</time><span class="cal-day-events" aria-hidden="true">${items.slice(0,2).map(e=>`<span class="cal-day-event ${e.attending?'is-attending':''}">${esc(e.meetup.title)}</span>`).join('')}${items.length>2?`<span class="cal-day-extra">+${items.length-2}개</span>`:''}</span><span class="cal-day-dots" aria-hidden="true">${items.slice(0,3).map(e=>`<i class="${e.attending?'is-attending':''}"></i>`).join('')}${items.length>3?'<b>+</b>':''}</span></button></td>`;
+      const dailyGroups=[...new Set(items.map(event=>event.group.id))].map(id=>({id,attending:items.some(event=>event.group.id===id&&event.attending)}));
+      const label=`${Number(key.slice(5,7))}월 ${Number(key.slice(8))}일${today?', 오늘':''}, 정모 ${items.length}개${selected?', 선택됨':''}${items.length?': '+items.map(event=>`${event.group.name} · ${event.meetup.title}${event.attending?' · 참석 중':''}`).join('; '):''}`;
+      return `<td class="${inside?'':'cal-outside'} ${index%7===0?'cal-sunday':index%7===6?'cal-saturday':''}"><button type="button" class="cal-day ${today?'is-today':''} ${selected?'is-selected':''}" data-calendar-day="${key}" data-calendar-focus="day-${key}" aria-label="${esc(label)}" aria-pressed="${selected}"><time datetime="${key}">${Number(key.slice(8))}</time><span class="cal-day-events" aria-hidden="true">${items.slice(0,2).map(e=>`<span class="cal-day-event ${e.attending?'is-attending':''}" data-calendar-group="${esc(e.group.id)}" style="${groupStyle(e.group.id)}" title="${esc(e.group.name+' · '+e.meetup.title)}">${e.attending?'✓ ':''}${esc(e.meetup.title)}</span>`).join('')}${items.length>2?`<span class="cal-day-extra">+${items.length-2}개</span>`:''}</span><span class="cal-day-dots" aria-hidden="true">${dailyGroups.slice(0,3).map(group=>`<i class="${group.attending?'is-attending':''}" data-calendar-group="${esc(group.id)}" style="${groupStyle(group.id)}"></i>`).join('')}</span></button></td>`;
     });
-    return `<div class="cal-month"><div class="cal-month-heading"><h2 id="calendar-month-title">${monthTitle()}</h2><div class="cal-month-navigation"><button type="button" class="cal-icon-button" data-calendar-action="prev" data-calendar-focus="prev" aria-label="이전 달">${api.icon('back')}</button><button type="button" class="cal-today-button" data-calendar-action="today" data-calendar-focus="today">오늘</button><button type="button" class="cal-icon-button" data-calendar-action="next" data-calendar-focus="next" aria-label="다음 달">${api.icon('arrow')}</button></div></div><table class="cal-month-table" aria-labelledby="calendar-month-title"><thead><tr>${['일','월','화','수','목','금','토'].map((day,i)=>`<th scope="col" class="${i===0?'cal-sunday':i===6?'cal-saturday':''}">${day}</th>`).join('')}</tr></thead><tbody>${Array.from({length:6},(_,row)=>`<tr>${cells.slice(row*7,row*7+7).join('')}</tr>`).join('')}</tbody></table><div class="cal-legend"><span><i></i>정모</span><span><i class="is-attending"></i>참석 중</span><span>날짜를 누르면 해당 일정만 보여요</span></div></div>`;
+    return `<div class="cal-month"><div class="cal-month-heading"><h2 id="calendar-month-title">${monthTitle()}</h2><div class="cal-month-navigation"><button type="button" class="cal-icon-button" data-calendar-action="prev" data-calendar-focus="prev" aria-label="이전 달">${api.icon('back')}</button><button type="button" class="cal-today-button" data-calendar-action="today" data-calendar-focus="today">오늘</button><button type="button" class="cal-icon-button" data-calendar-action="next" data-calendar-focus="next" aria-label="다음 달">${api.icon('arrow')}</button></div></div><table class="cal-month-table" aria-labelledby="calendar-month-title"><thead><tr>${['일','월','화','수','목','금','토'].map((day,i)=>`<th scope="col" class="${i===0?'cal-sunday':i===6?'cal-saturday':''}">${day}</th>`).join('')}</tr></thead><tbody>${Array.from({length:6},(_,row)=>`<tr>${cells.slice(row*7,row*7+7).join('')}</tr>`).join('')}</tbody></table><div class="cal-legend"><span><i class="cal-attendance-ring"></i>테두리·✓: 참석 중</span><span>날짜를 누르면 해당 일정만 보여요</span></div>${groupLegendMarkup(visible)}</div>`;
   }
   function eventCard(event,pairs,all){
     const related=pairs.filter(pair=>pair.first===event.id||pair.second===event.id);
     const conflictText=related.map(pair=>{const other=all.find(e=>e.id===(pair.first===event.id?pair.second:pair.first));return `‘${other?.meetup.title||'다른 정모'}’와 ${pair.minutes}분 겹쳐요${pair.assumedEnd?' · 종료 미정 정모는 2시간 가정':''}`;});
     const day=event.date.slice(8),weekday=new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',weekday:'short'}).format(new Date(event.start));
-    return `<article class="cal-event-card ${event.attending?'is-attending':''} ${related.length?'has-conflict':''}" data-calendar-event="${esc(event.id)}"><div class="cal-event-day"><strong>${Number(day)}</strong><span>${weekday}</span></div><div class="cal-event-body"><div class="cal-event-labels"><button type="button" class="cal-group-link" data-open-group="${esc(event.group.id)}">${esc(event.group.name)}</button>${event.attending?'<span class="cal-status">참석 중</span>':event.joined?'<span class="cal-status is-joined">내 모임</span>':''}${related.length?'<span class="cal-status is-conflict">일정 겹침</span>':''}</div><button type="button" class="cal-event-title" data-meetup="${esc(event.id)}">${esc(event.meetup.title)}</button><p class="cal-event-time">${clock.format(new Date(event.start))}–${clock.format(new Date(event.end))}<span>${event.assumedEnd?'종료 미정 · 2시간 가정':'예정 시간'}</span></p><p class="cal-event-location">${api.icon('pin')}${esc(event.place?.name||'장소 미정')}</p>${conflictText.length?`<p class="cal-conflict-detail">${conflictText.map(esc).join('<br>')}</p>`:''}<div class="cal-event-actions"><button type="button" class="button" data-meetup="${esc(event.id)}">정모 상세 ${api.icon('arrow')}</button><button type="button" class="button ${event.attending?'soft':''}" data-room="meetup:${esc(event.id)}">${api.icon(event.attending?'chat':'lock')}${event.attending?'참석자 대화방':'참석 후 대화방'}</button></div></div></article>`;
+    return `<article class="cal-event-card ${event.attending?'is-attending':''} ${related.length?'has-conflict':''}" data-calendar-event="${esc(event.id)}" data-calendar-group="${esc(event.group.id)}" style="${groupStyle(event.group.id)}"><div class="cal-event-day"><strong>${Number(day)}</strong><span>${weekday}</span></div><div class="cal-event-body"><div class="cal-event-labels"><button type="button" class="cal-group-link" data-open-group="${esc(event.group.id)}">${esc(event.group.name)}</button>${event.attending?'<span class="cal-status is-attending">✓ 참석 중</span>':event.joined?'<span class="cal-status is-joined">내 모임</span>':''}${related.length?'<span class="cal-status is-conflict">일정 겹침</span>':''}</div><button type="button" class="cal-event-title" data-meetup="${esc(event.id)}">${esc(event.meetup.title)}</button><p class="cal-event-time">${clock.format(new Date(event.start))}–${clock.format(new Date(event.end))}<span>${event.assumedEnd?'종료 미정 · 2시간 가정':'예정 시간'}</span></p><p class="cal-event-location">${api.icon('pin')}${esc(event.place?.name||'장소 미정')}</p>${conflictText.length?`<p class="cal-conflict-detail">${conflictText.map(esc).join('<br>')}</p>`:''}<div class="cal-event-actions"><button type="button" class="button" data-meetup="${esc(event.id)}">정모 상세 ${api.icon('arrow')}</button><button type="button" class="button ${event.attending?'soft':''}" data-room="meetup:${esc(event.id)}">${api.icon(event.attending?'chat':'lock')}${event.attending?'참석자 대화방':'참석 후 대화방'}</button></div></div></article>`;
   }
   function agendaMarkup(visible,pairs,all){
     const monthEvents=visible.filter(e=>monthKey(e.start)===view.month),shown=view.date?monthEvents.filter(e=>e.date===view.date):monthEvents;
@@ -86,7 +112,10 @@
   }
   function renderPage(){
     const all=events(),visible=filtered(all),attending=all.filter(e=>e.attending),pairs=conflicts(attending);
-    return `<section id="moyo-calendar" class="calendar-page"><div class="page-heading cal-page-heading"><div><div class="eyebrow">OUR PLANS</div><h1>통합 캘린더</h1><p>여러 모임의 정모를 한 번에 확인해요.</p></div><button type="button" class="button cal-export-button" data-calendar-action="export" data-calendar-focus="export" ${attending.length?'':'disabled'}>${api.icon('calendar')}참석 일정 .ics</button></div><div class="cal-filters"><div class="cal-filter-tabs" role="group" aria-label="일정 범위">${[['all','전체 모임'],['joined','내 모임'],['attending','참석 중']].map(([id,label])=>`<button type="button" class="${view.filter===id?'active':''}" data-calendar-filter="${id}" data-calendar-focus="filter-${id}" aria-pressed="${view.filter===id}">${label}</button>`).join('')}</div><label class="cal-group-select"><span class="sr-only">일정을 볼 모임</span><select id="calendar-group-filter" data-calendar-focus="group" aria-label="일정을 볼 모임"><option value="all">모든 모임</option>${api.groups.map(group=>`<option value="${esc(group.id)}" ${view.groupId===group.id?'selected':''}>${esc(group.name)}</option>`).join('')}</select></label></div><div class="cal-attendance-status ${pairs.length?'has-conflict':''}"><span>${api.icon(pairs.length?'calendar':'check')}내 참석 정모 <strong>${attending.length}개</strong> · ${pairs.length?`겹치는 일정 ${pairs.length}쌍`:'겹치는 일정 없음'}</span><small>참석 일정 파일에는 현재 필터와 관계없이 ${attending.length}개 정모가 포함돼요.</small></div><div class="cal-layout">${monthMarkup(visible)}${agendaMarkup(visible,pairs,all)}</div><p class="cal-footnote">한국 표준시(KST) 기준 · 종료 시각이 없는 정모는 일정 겹침 확인과 캘린더 내보내기에 <strong>2시간</strong>을 가정해요. 정확한 종료 시간은 정모에서 확인해 주세요.</p></section>`;
+    return `<section id="moyo-calendar" class="calendar-page"><div class="page-heading cal-page-heading"><div><div class="eyebrow">OUR PLANS</div><h1>통합 캘린더</h1><p>여러 모임의 정모를 한 번에 확인해요.</p></div><button type="button" class="button cal-export-button" data-calendar-action="export" data-calendar-focus="export" ${attending.length?'':'disabled'}>${api.icon('calendar')}참석 일정 .ics</button></div>
+      <div class="cal-filters"><div class="cal-filter-tabs" role="group" aria-label="일정 범위">${[['all','전체 모임'],['joined','내 모임'],['attending','참석 중']].map(([id,label])=>`<button type="button" class="${view.filter===id?'active':''}" data-calendar-filter="${id}" data-calendar-focus="filter-${id}" aria-pressed="${view.filter===id}">${label}</button>`).join('')}</div><label class="cal-group-select"><span class="sr-only">일정을 볼 모임</span><select id="calendar-group-filter" data-calendar-focus="group" aria-label="일정을 볼 모임"><option value="all">모든 모임</option>${api.groups.map(group=>`<option value="${esc(group.id)}" ${view.groupId===group.id?'selected':''}>${esc(group.name)}</option>`).join('')}</select></label></div>
+      <div class="cal-sample-row"><p>기존 데이터는 유지하고 샘플 가입·참석을 추가해요.</p><button type="button" data-calendar-action="multi-group-demo" data-calendar-focus="multi-group-demo">여러 모임 샘플 추가 ${api.icon('plus')}</button></div>
+      <div class="cal-attendance-status ${pairs.length?'has-conflict':''}"><span>${api.icon(pairs.length?'calendar':'check')}내 참석 정모 <strong>${attending.length}개</strong> · ${pairs.length?`겹치는 일정 ${pairs.length}쌍`:'겹치는 일정 없음'}</span><small>참석 일정 파일에는 현재 필터와 관계없이 ${attending.length}개 정모가 포함돼요.</small></div><div class="cal-layout">${monthMarkup(visible)}${agendaMarkup(visible,pairs,all)}</div><p class="cal-footnote">한국 표준시(KST) 기준 · 종료 시각이 없는 정모는 일정 겹침 확인과 캘린더 내보내기에 <strong>2시간</strong>을 가정해요. 정확한 종료 시간은 정모에서 확인해 주세요.</p></section>`;
   }
   function refresh(focusKey){
     if(api.state.page!=='calendar')return;
@@ -123,6 +152,14 @@
     const action=button.dataset.calendarAction,filter=button.dataset.calendarFilter,day=button.dataset.calendarDay;
     if(filter&&filters.includes(filter)){view.filter=filter;view.date='';}
     else if(day){view.month=day.slice(0,7);view.date=view.date===day?'':day;}
+    else if(action==='multi-group-demo'){
+      if(typeof api.loadMultiGroupSample!=='function'){api.toast('여러 모임 샘플을 아직 준비 중이에요.');return;}
+      const result=api.loadMultiGroupSample()||{},count=value=>Array.isArray(value)?value.length:Number(value)||0;
+      view.filter='joined';view.groupId='all';view.date='';view.month=initialMonth();save();api.render();
+      const addedGroups=count(result.addedGroups),addedAttendance=count(result.addedAttendance),skipped=count(result.skippedAttendance);
+      api.toast((addedGroups||addedAttendance?`모임 ${addedGroups}개·정모 참석 ${addedAttendance}개를 추가했어요.`:'여러 모임 샘플이 이미 적용되어 있어요.')+(skipped?` 만석인 정모 ${skipped}개는 건너뛰었어요.`:''));
+      document.querySelector('[data-calendar-focus="multi-group-demo"]')?.focus({preventScroll:true});return;
+    }
     else if(action==='export'){exportIcs();return;}
     else if(action==='prev')shiftMonth(-1);
     else if(action==='next')shiftMonth(1);
@@ -153,5 +190,5 @@
       document.querySelectorAll('#modal-root [data-attend]').forEach(button=>button.addEventListener('click',()=>setTimeout(()=>refresh(),0),{once:true}));
     }
   });
-  window.MoyobomCalendar={open:()=>api.changePage('calendar'),getEvents:events,getConflicts:()=>conflicts(),buildIcs,exportIcs};
+  window.MoyobomCalendar={open:()=>api.changePage('calendar'),getEvents:events,getConflicts:()=>conflicts(),getGroupColor:groupColor,buildIcs,exportIcs};
 })();

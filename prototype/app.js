@@ -153,8 +153,8 @@
   const defaultRead=publicSeed[Math.max(0,publicSeed.length-301)]?.at??ts('25','18:03');
   const state = {
     page:'explore',groupId:'walk',groupTab:'홈',query:'',area:'all',category:'전체',
-    joined:new Set(Array.isArray(stored.joined)?validArray(stored.joined).filter(id=>allowedIds.has(id)):['walk']),
-    likes:new Set(validArray(stored.likes).filter(id=>allowedIds.has(id))),attendance:new Set(Array.isArray(stored.attendance)?validArray(stored.attendance):['forest-sunday','walk-coffee']),
+    joined:new Set(Array.isArray(stored.joined)?validArray(stored.joined).filter(id=>allowedIds.has(id)):['walk','book','racket']),
+    likes:new Set(validArray(stored.likes).filter(id=>allowedIds.has(id))),attendance:new Set(Array.isArray(stored.attendance)?validArray(stored.attendance):['forest-sunday','walk-coffee','book-evening','racket-first']),
     meetups:[...initialMeetups,...persistedMeetups],messages:[...sampleMessages,...persistedMessages],
     roomId:'group:walk',readByRoom:Object.fromEntries([...groups.map(g=>'group:'+g.id),...initialMeetups.map(m=>'meetup:'+m.id)].map(id=>[id,stored.datasetVersion===2&&Number.isFinite(stored.readByRoom?.[id])?stored.readByRoom[id]:(id==='group:walk'?defaultRead:ts('25','15:10'))])),unreadSnapshot:defaultRead,
     summaryOpen:false,summaryTarget:'all',summaryPerson:'minji',summaryRange:'unread',summaryStatus:'idle',summaryResult:[],summaryCount:0,
@@ -199,6 +199,17 @@
     catch { toast('이 브라우저에서는 변경 내용을 저장할 수 없어요. 현재 화면에서는 계속 사용할 수 있어요.'); }
   }
   function toast(text){const element=$('#toast');element.textContent=text;element.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>element.hidden=true,3500);}
+  function loadMultiGroupSample(){
+    let addedGroups=0,addedAttendance=0,skippedAttendance=0;
+    for(const id of ['walk','book','racket'])if(allowedIds.has(id)&&!state.joined.has(id)){state.joined.add(id);addedGroups++;}
+    for(const id of ['forest-sunday','walk-coffee','book-evening','racket-first']){
+      const meetup=state.meetups.find(m=>m.id===id);
+      if(!meetup||state.attendance.has(id))continue;
+      if(roomParticipants('meetup:'+id).length>=meetup.capacity){skippedAttendance++;continue;}
+      state.attendance.add(id);addedAttendance++;
+    }
+    persist();return {addedGroups,addedAttendance,skippedAttendance};
+  }
   function renderNav(){
     const nav=[['explore','compass','탐색'],['mygroups','users','내 모임'],['chats','chat','채팅'],['my','user','마이']];
     const active=state.page==='group'||['calendar','saved','operations','benefits'].includes(state.page)?'mygroups':state.page==='chat'?'chats':state.page;
@@ -704,7 +715,7 @@
     changePage('chat',{groupId,roomId});return state.page==='chat';
   }
   function jumpToMessage(roomId,messageId){if(!canOpenRoom(roomId)){toast('현재 참여할 수 없는 채팅방입니다. 정모 참석 여부를 확인해 주세요.');return false;}if(!roomMessagesById(roomId).some(m=>m.id===messageId)){toast('연결된 원문이 현재 세션에 없어요.');return false;}if(!openRoom({roomId}))return false;state.focusId=messageId;renderMessages('source');return true;}
-  appAPI=window.Moyobom={state,groups,members,places,$,$$,esc,icon,group,member,render,changePage,persist,openModal,closeModal,toast,meetupAt,dateLabel,time,chatMessages,openRoom,jumpToMessage,getRoomId,registerExtension(name,extension){extensions.set(name,extension);extension.init?.(appAPI);extension.afterRender?.(appAPI);return appAPI;}};
+  appAPI=window.Moyobom={state,groups,members,places,$,$$,esc,icon,group,member,render,changePage,persist,loadMultiGroupSample,openModal,closeModal,toast,meetupAt,dateLabel,time,chatMessages,openRoom,jumpToMessage,getRoomId,registerExtension(name,extension){extensions.set(name,extension);extension.init?.(appAPI);extension.afterRender?.(appAPI);return appAPI;}};
   window.addEventListener('resize',syncChatLayoutState,{passive:true});
   window.visualViewport?.addEventListener('resize',syncChatLayoutState,{passive:true});
   document.body.classList.toggle('force-mobile',forcedMobile);document.body.classList.toggle('force-web',forcedWeb);document.body.dataset.viewMode=viewMode;
