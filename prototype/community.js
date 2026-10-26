@@ -44,7 +44,7 @@
       if (photo.id === 'sample-' + id && /^(\.\/)?assets\/avatars\/[^/]+\.jpg$/.test(photo.data || '')) photo.data = 'assets/avatars/' + id + '.png';
     });
   });
-  const getProfile = id => data.profiles[id] || {photos:[{id:'sample-'+id,name:'예시 프로필 사진',data:'assets/avatars/'+id+'.png'},...(id==='me'?[{id:'sample-my-walk',name:'산책 분위기 예시 사진',data:'assets/photos/walk.jpg'}]:[])],representativeId:'sample-'+id};
+  const getProfile = id => data.profiles[id] || {photos:[{id:'sample-'+id,name:id==='hohyung'?'이호형 프로필 사진':'예시 프로필 사진',data:'assets/avatars/'+id+'.png'},...(id==='me'?[{id:'sample-my-walk',name:'산책 분위기 예시 사진',data:'assets/photos/walk.jpg'}]:[])],representativeId:'sample-'+id,bio:api.members.find(m=>m.id===id)?.bio||''};
   const person = id => api.members.find(m => m.id === id) || api.members[0];
   const groupById = id => api.groups.find(g => g.id === id);
   const mine = () => person('me');
@@ -168,11 +168,12 @@
   }
   function profile(id) {
     activeProfile=id;
-    const p=person(id), details=getProfile(id);
+    const p=person(id), details=getProfile(id),partner=p.partnerId?person(p.partnerId):null;
+    const relationship=partner?`<div class="cm-relationship">${icon('heart')}<div><strong>${esc(partner.name)}와 함께</strong><span>연인 사이</span></div><button type="button" class="button small" data-couple-action="open">둘만의 대화 ${icon('arrow')}</button></div>`:'';
     const own=id==='me', visiblePosts=data.posts.filter(post=>post.authorId===id&&api.state.joined.has(post.groupId));
     const sampleIds={minji:['forest-sunday','river-sunset'],junho:['forest-sunday'],jisoo:['forest-sunday','book-evening'],hyun:['forest-sunday']};
     const meetings=api.state.meetups.filter(m=>api.state.joined.has(m.groupId)&&(own?api.state.attendance.has(m.id):(sampleIds[id]||[]).includes(m.id)));
-    showModal(own?'내 프로필':'멤버 프로필', `<div class="cm-profile-head">${avatar(id,'cm-avatar-xl',false)}<h1>${esc(p.name)}</h1><span class="pill">${esc(p.role)}</span><p class="cm-prose">${esc(details.bio || (own?'함께하는 취미가 일상이 되는 중이에요.':'새로운 사람들과 취미를 나누고 싶어요. 함께 만나요!'))}</p>${own?btn('edit-profile','프로필 · 사진 관리','soft'):''}</div>${details.photos?.length?`<h3>프로필 사진 <small>${details.photos.length}</small></h3>${imageGrid(details.photos,'프로필 사진')}`:''}<section class="cm-profile-section"><h3>작성한 글 <small>${visiblePosts.length}</small></h3>${visiblePosts.length?visiblePosts.map(postCard).join(''):empty('함께 가입한 모임에 작성한 글이 없어요.')}</section><section class="cm-profile-section"><h3>참여 정모 <small>${meetings.length}</small></h3>${own?'':'<p class="cm-muted">대표 멤버의 참여 예시예요. 함께 가입한 모임만 표시해요.</p>'}${meetings.length?meetings.map(m=>`<button type="button" class="cm-meeting-link" data-meetup="${esc(m.id)}"><strong>${esc(m.title)}</strong><span>${api.dateLabel(api.meetupAt(m))} · ${api.time(api.meetupAt(m))}</span>${icon('arrow')}</button>`).join(''):empty('참여 중인 정모가 없어요.')}</section>`, '', true, 'community-profile');
+    showModal(own?'내 프로필':'멤버 프로필', `<div class="cm-profile-head">${avatar(id,'cm-avatar-xl',false)}<h1>${esc(p.name)}</h1><span class="pill">${esc(p.role)}</span><p class="cm-prose">${esc(details.bio || (own?'함께하는 취미가 일상이 되는 중이에요.':'새로운 사람들과 취미를 나누고 싶어요. 함께 만나요!'))}</p>${own?btn('edit-profile','프로필 · 사진 관리','soft'):''}</div>${relationship}${details.photos?.length?`<h3>프로필 사진 <small>${details.photos.length}</small></h3>${imageGrid(details.photos,'프로필 사진')}`:''}<section class="cm-profile-section"><h3>작성한 글 <small>${visiblePosts.length}</small></h3>${visiblePosts.length?visiblePosts.map(postCard).join(''):empty('함께 가입한 모임에 작성한 글이 없어요.')}</section><section class="cm-profile-section"><h3>참여 정모 <small>${meetings.length}</small></h3>${own||partner?'':'<p class="cm-muted">대표 멤버의 참여 예시예요. 함께 가입한 모임만 표시해요.</p>'}${meetings.length?meetings.map(m=>`<button type="button" class="cm-meeting-link" data-meetup="${esc(m.id)}"><strong>${esc(m.title)}</strong><span>${api.dateLabel(api.meetupAt(m))} · ${api.time(api.meetupAt(m))}</span>${icon('arrow')}</button>`).join(''):empty('참여 중인 정모가 없어요.')}</section>`, '', true, 'community-profile');
   }
   function editProfile() {
     const p=getProfile('me');draft={kind:'profile',images:structuredClone(p.photos||[]),representativeId:p.representativeId||p.photos?.[0]?.id||null};
@@ -220,7 +221,7 @@
   }
   function afterModal() {
     if(api.state.modal?.type!=='members')return;
-    const members=api.state.groupId.startsWith('custom-')?[mine()]:api.members;
+    const members=api.getRoomId()==='group:couple'?[person('jisoo'),person('hohyung')]:api.state.groupId.startsWith('custom-')?[mine()]:api.members;
     const el=$('.modal-body');if(el)el.innerHTML=`<p class="cm-muted">${esc(api.group().name)} · 멤버의 사진을 눌러 프로필과 활동을 확인해요.</p><div class="cm-member-list">${members.map(m=>`<button type="button" class="cm-member-button" data-community-action="profile" data-community-value="${esc(m.id)}">${avatar(m.id,'',false)}<span><strong>${esc(m.name)}</strong><small>${esc(m.role)}</small></span>${icon('arrow')}</button>`).join('')}</div><p class="cm-muted">대표 멤버 예시 · 실제 서비스에서는 전체 멤버를 조회해요.</p>`;
   }
   document.addEventListener('click', event => {
